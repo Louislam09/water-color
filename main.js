@@ -1,7 +1,16 @@
 
-const allPipes = document.querySelectorAll(".pipe");
 const selectedPipes = [];
 const colors = ["c1", "c2", "c3", "c4"];
+
+function shuffle(arr) {
+    const a = [...arr];
+    const newArr = []
+
+    while (a.length != 0) {
+        newArr.push(a.splice(Math.floor(Math.random() * a.length), 1)[0]);
+    }
+    return newArr
+}
 
 class Game {
     constructor() {
@@ -19,7 +28,7 @@ class Game {
 
     addPipes() {
         for (let i = 0; i < 5; i++) {
-            const p = new Pipe(this.pContainer, i === 3);
+            const p = new Pipe(this.pContainer, i === 3 || i === 4);
             p.init()
         }
     }
@@ -36,14 +45,13 @@ class Pipe {
         this.pipe.classList.add("pipe");
         this.pContainer.appendChild(this.pipe);
         this.pipe.addEventListener("click", this.pipeClicked);
-        if (!this.isEmpy) this.addColorBlock()
+        if (!this.isEmpy) this.addColorBlock(shuffle(colors))
     }
 
     pipeClicked = ({ currentTarget: cPipe }) => {
         if (selectedPipes.length === 2) return;
         if (!selectedPipes[0] && cPipe.children.length === 0) return;
         selectedPipes.push(cPipe);
-        allPipes.forEach(pipe => pipe.classList.remove("selected"));
 
         if (selectedPipes.length === 2) {
             this.pourColor(selectedPipes);
@@ -65,9 +73,9 @@ class Pipe {
         this.resetPipes();
     }
 
-    addColorBlock() {
+    addColorBlock(colorArr) {
         for (let i = 0; i < 4; i++) {
-            const cb = new ColorBlock(this.pipe, colors[i]);
+            const cb = new ColorBlock(this.pipe, colorArr[i]);
             cb.init();
         }
     }
