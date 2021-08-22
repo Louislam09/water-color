@@ -1,6 +1,37 @@
 
 const selectedPipes = [];
-const colors = ["c1", "c2", "c3", "c4"];
+const colors = ["g1", "o2", "r3", "p4", "b5"];
+const numberOfPipes = 7;
+
+const animationPos = {
+    animation1_2: {
+        x1: -100,
+        x2: -172,
+        y1: 0,
+        y2: 10
+    },
+    animation1_3: {
+        x1: -100,
+        x2: -172,
+        y1: 0,
+        y2: 10
+    },
+    animation1_4: {
+        x1: -100,
+        x2: -172,
+        y1: 0,
+        y2: 10
+    },
+}
+
+function getAnimationClass() {
+    const [p1, p2] = selectedPipes;
+    const c1 = p1.classList[0];
+    const c2 = p2.classList[0];
+
+
+    return `animation${c1}_${c2}`;
+}
 
 function shuffle(arr) {
     const a = [...arr];
@@ -12,10 +43,16 @@ function shuffle(arr) {
     return newArr
 }
 
+const getListOfColors = () => {
+    return [...shuffle(colors), ...shuffle(colors), ...shuffle(colors), ...shuffle(colors)]
+}
+
 class Game {
     constructor() {
         this.gameScreen = document.createElement("div");
         this.pContainer = document.createElement("div");
+        this.listOfColors = getListOfColors();
+        this.pipeList = []
     }
 
     init() {
@@ -26,18 +63,29 @@ class Game {
         this.addPipes()
     }
 
+    checkWin() {
+        const notEmpty = this.pipeList.filter(({ pipe }) => pipe.childNodes.length > 0);
+        const isGameCompleted = notEmpty.every(({ pipe }) => pipe.classList.contains("completed"))
+        if (isGameCompleted) {
+            alert("You have completed the game")
+        }
+    }
+
     addPipes() {
-        for (let i = 0; i < 5; i++) {
-            const p = new Pipe(this.pContainer, i === 3 || i === 4);
+        for (let i = 0; i < numberOfPipes; i++) {
+            const p = new Pipe(this.pContainer, this.listOfColors, i === 1 || i === 2);
+            p.pipe.classList.add(`${i}`);
             p.init()
+            this.pipeList.push(p);
         }
     }
 }
 
 class Pipe {
-    constructor(pContainer, isEmpy = false) {
+    constructor(pContainer, listOfColors, isEmpy = false) {
         this.isEmpy = isEmpy;
         this.pContainer = pContainer;
+        this.listOfColors = listOfColors;
         this.pipe = document.createElement("div");
     }
 
@@ -45,7 +93,7 @@ class Pipe {
         this.pipe.classList.add("pipe");
         this.pContainer.appendChild(this.pipe);
         this.pipe.addEventListener("click", this.pipeClicked);
-        if (!this.isEmpy) this.addColorBlock(shuffle(colors))
+        if (!this.isEmpy) this.addColorBlock()
     }
 
     pipeClicked = ({ currentTarget: cPipe }) => {
@@ -68,14 +116,64 @@ class Pipe {
 
         const [p1, p2] = pipes;
         const cp1 = p1;
-        const colorToMove = cp1.firstElementChild;
-        p2.append(colorToMove, ...Array.from(p2.childNodes));
-        this.resetPipes();
+
+        const dir = +p1.getBoundingClientRect().x > +p2.getBoundingClientRect().x ? "pourLeft" : "pourRight";
+        // console.log({ s: p2.getBoundingClientRect() })
+        console.log({ animation: getAnimationClass() })
+        // const dir = dire == "left" ? "pourLeft" : "pourRight";
+        const animation = getAnimationClass();
+        // p1.classList.add(dir);
+        p1.classList.add(animation);
+        const toMovePipes = this.getSameColor(cp1, p2);
+
+        setTimeout(() => {
+            toMovePipes.forEach(e => {
+                e.classList.add("slide")
+
+                e.addEventListener("animationend", () => {
+                    e.classList.remove("slide")
+                })
+            })
+
+            p1.classList.remove(animation);
+            p2.append(...toMovePipes, ...Array.from(p2.childNodes));
+            this.isComplete();
+            game && game.checkWin();
+            this.resetPipes();
+        }, 1000);
+        // p1.addEventListener("animationend", () => {
+        //     p1.classList.remove(animation);
+        //     p2.append(...toMovePipes, ...Array.from(p2.childNodes));
+        //     this.isComplete();
+        //     game && game.checkWin();
+        //     this.resetPipes();
+        // })
+
     }
 
-    addColorBlock(colorArr) {
+    getSameColor(pipe, pipe2) {
+        const sc = [pipe.firstElementChild];
+        let nextPipeCanReceive = 4 - pipe2.childNodes.length;
+
+        while (pipe.childNodes[sc.length] && pipe.firstElementChild.classList[1] == pipe.childNodes[sc.length].classList[1]) {
+            sc.push(pipe.childNodes[sc.length])
+        }
+
+        return sc.slice(0, nextPipeCanReceive)
+    }
+
+    isComplete() {
+        if (this.pipe.childNodes.length === 4) {
+            console.log("has four")
+            const areEquals = [...this.pipe.children].every(i => i.className === this.pipe.firstElementChild.className)
+            areEquals && this.pipe.classList.add("completed");
+        }
+    }
+
+    addColorBlock() {
         for (let i = 0; i < 4; i++) {
-            const cb = new ColorBlock(this.pipe, colorArr[i]);
+            let randomColor = this.listOfColors.splice(Math.floor(Math.random() * this.listOfColors.length), 1)[0];
+            const cb = new ColorBlock(this.pipe, randomColor);
             cb.init();
         }
     }
@@ -87,7 +185,11 @@ class Pipe {
 
     isValidPour = (pipes) => {
         const [p1, p2] = pipes;
+        const classToMatch = p2.firstElementChild ? p2.firstElementChild.classList[1] : null;
+        const classToMatch1 = p1.firstElementChild ? p1.firstElementChild.classList[1] : null;
+
         if (p2.children.length === 4) return true;
+        if (classToMatch && classToMatch !== classToMatch1) return true
 
     }
 
@@ -108,3 +210,26 @@ class ColorBlock {
 }
 const game = new Game();
 game.init()
+
+
+// let firstPos = null;
+// let dire = null;
+
+// document.addEventListener("click", (e) => {
+//     if (!firstPos) {
+//         firstPos = {
+//             x: e.clientX,
+//             y: e.clientY,
+//         }
+//         return;
+//     }
+
+//     if (firstPos.x > e.clientX) {
+//         dire = "left";
+//         firstPos = null;
+//     } else {
+//         firstPos = null;
+//         dire = "right";
+//     }
+//     console.log({ dire })
+// })
