@@ -129,7 +129,7 @@ body {
     animation: pourRight 1s 1;
 }
 
-@keyframes pourLeft {
+/* @keyframes pourLeft {
     from {
         transform: rotate(0deg);
     }
@@ -160,7 +160,6 @@ body {
         transform: rotate(90deg) translate(-172px, 40px);
     }
 }
-
 
 @keyframes animation0_2 {
     from {
@@ -212,46 +211,66 @@ body {
     }
 }
 
-
-
 .animation0_1 {
-    animation: animation0_1 .9s 1;
+    animation: animation0_1 2s 1;
 }
 
 .animation0_2 {
-    animation: animation0_2 .9s 1;
+    animation: animation0_2 2s 1;
 }
 
 .animation0_3 {
-    animation: animation0_3 .9s 1;
+    animation: animation0_3 2s 1;
 }
 
 .animation0_4 {
-    animation: animation0_4 .9s 1;
+    animation: animation0_4 2s 1;
 }
 
 .animation0_5 {
-    animation: animation0_5 .9s 1;
+    animation: animation0_5 2s 1;
 }
 
 .animation0_6 {
-    animation: animation0_6 .8s 1;
+    animation: animation0_6 2s 1;
 }
 
-.slide {
-    /* animation: slide-in-top .5s cubic-bezier(.25, .46, .45, .94) 1; */
-    animation: slide-in-top .9s cubic-bezier(.25, .46, .45, .94) 1;
+.empty {
+    transition: all 1s ease;
+    animation: emptyAction 1s 1s ease 1;
 }
 
+.pourAction {
+    width: 6px;
+    position: absolute;
+    border-radius: 50px;
+    left: 50%;
+    height: 100%;
+    margin-left: -3px;
+    z-index: -1;
+    bottom: 0;
+    top: 0;
+    animation: pourAction 1s linear 1;
+}
 
-@keyframes slide-in-top {
+@keyframes pourAction {
     0% {
-        transform: translateY(-100px);
-        /* opacity: 0 */
+        transform: translateY(-90%);
+        opacity: 1;
     }
 
     100% {
         transform: translateY(0);
-        /* opacity: 1 */
+        opacity: 0.5;
     }
 }
+
+@keyframes emptyAction {
+    0% {
+        height: calc(var(--pipe-h) / 4);
+    }
+
+    100% {
+        height: 0%;
+    }
+} */

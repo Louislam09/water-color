@@ -24,12 +24,12 @@ const animationPos = {
     },
 }
 
-function getAnimationClass() {
+function getAnimationClass(dir) {
     const [p1, p2] = selectedPipes;
     const c1 = p1.classList[0];
     const c2 = p2.classList[0];
 
-
+    // return c1 != 1 ? dir : `animation${c1}_${c2}`;
     return `animation${c1}_${c2}`;
 }
 
@@ -98,6 +98,7 @@ class Pipe {
 
     pipeClicked = ({ currentTarget: cPipe }) => {
         if (selectedPipes.length === 2) return;
+
         if (!selectedPipes[0] && cPipe.children.length === 0) return;
         selectedPipes.push(cPipe);
 
@@ -118,36 +119,38 @@ class Pipe {
         const cp1 = p1;
 
         const dir = +p1.getBoundingClientRect().x > +p2.getBoundingClientRect().x ? "pourLeft" : "pourRight";
-        // console.log({ s: p2.getBoundingClientRect() })
-        console.log({ animation: getAnimationClass() })
-        // const dir = dire == "left" ? "pourLeft" : "pourRight";
-        const animation = getAnimationClass();
-        // p1.classList.add(dir);
+        const animation = getAnimationClass(dir);
+        let toMovePipes = this.getSameColor(cp1, p2);
         p1.classList.add(animation);
-        const toMovePipes = this.getSameColor(cp1, p2);
 
-        setTimeout(() => {
-            toMovePipes.forEach(e => {
-                e.classList.add("slide")
+        toMovePipes && toMovePipes.forEach(e => {
+            e.classList.add("empty")
 
-                e.addEventListener("animationend", () => {
-                    e.classList.remove("slide")
+            e.addEventListener("animationstart", () => {
+                let a = pourBlock(toMovePipes);
+                p2.appendChild(a);
+
+                a.addEventListener("animationend", () => {
+                    a.remove()
+                    e.classList.remove("empty")
+                    // remove this condition
+                    toMovePipes && p2.append(...toMovePipes, ...Array.from(p2.childNodes));
+                    toMovePipes = null;
                 })
             })
+        })
 
+        p1.addEventListener("animationend", () => {
             p1.classList.remove(animation);
-            p2.append(...toMovePipes, ...Array.from(p2.childNodes));
+
+            // toMovePipes && toMovePipes.forEach(e => {
+            //     e.classList.remove("empty")
+            // })
+
             this.isComplete();
             game && game.checkWin();
             this.resetPipes();
-        }, 1000);
-        // p1.addEventListener("animationend", () => {
-        //     p1.classList.remove(animation);
-        //     p2.append(...toMovePipes, ...Array.from(p2.childNodes));
-        //     this.isComplete();
-        //     game && game.checkWin();
-        //     this.resetPipes();
-        // })
+        })
 
     }
 
@@ -172,6 +175,7 @@ class Pipe {
 
     addColorBlock() {
         for (let i = 0; i < 4; i++) {
+            if (i > 0) return;
             let randomColor = this.listOfColors.splice(Math.floor(Math.random() * this.listOfColors.length), 1)[0];
             const cb = new ColorBlock(this.pipe, randomColor);
             cb.init();
@@ -193,6 +197,13 @@ class Pipe {
 
     }
 
+}
+
+function pourBlock(toMovePipes) {
+    let a = document.createElement("div")
+    toMovePipes && a.classList.add(toMovePipes[0].classList[1]);
+    a.classList.add("pourAction");
+    return a
 }
 
 class ColorBlock {
