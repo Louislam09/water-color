@@ -3,33 +3,11 @@ const selectedPipes = [];
 const colors = ["g1", "o2", "r3", "p4", "b5"];
 const numberOfPipes = 7;
 
-const animationPos = {
-    animation1_2: {
-        x1: -100,
-        x2: -172,
-        y1: 0,
-        y2: 10
-    },
-    animation1_3: {
-        x1: -100,
-        x2: -172,
-        y1: 0,
-        y2: 10
-    },
-    animation1_4: {
-        x1: -100,
-        x2: -172,
-        y1: 0,
-        y2: 10
-    },
-}
-
-function getAnimationClass(dir) {
+function getAnimationClass() {
     const [p1, p2] = selectedPipes;
     const c1 = p1.classList[0];
     const c2 = p2.classList[0];
 
-    // return c1 != 1 ? dir : `animation${c1}_${c2}`;
     return `animation${c1}_${c2}`;
 }
 
@@ -72,8 +50,12 @@ class Game {
     }
 
     addPipes() {
+        const randomEmpties = [];
+        const number = Math.floor(Math.random() * numberOfPipes);
+        randomEmpties.push(number);
+        number >= 6 ? randomEmpties.push(number - 1) : randomEmpties.push(number + 1);
         for (let i = 0; i < numberOfPipes; i++) {
-            const p = new Pipe(this.pContainer, this.listOfColors, i === 1 || i === 2);
+            const p = new Pipe(this.pContainer, this.listOfColors, randomEmpties.includes(i));
             p.pipe.classList.add(`${i}`);
             p.init()
             this.pipeList.push(p);
@@ -118,38 +100,32 @@ class Pipe {
         const [p1, p2] = pipes;
         const cp1 = p1;
 
-        const dir = +p1.getBoundingClientRect().x > +p2.getBoundingClientRect().x ? "pourLeft" : "pourRight";
-        const animation = getAnimationClass(dir);
+        const animation = getAnimationClass();
         let toMovePipes = this.getSameColor(cp1, p2);
         p1.classList.add(animation);
+        p2.classList.add("pouringIn")
 
         toMovePipes && toMovePipes.forEach(e => {
-            e.classList.add("empty")
+            e.classList.add("empty_animation")
 
             e.addEventListener("animationstart", () => {
-                let a = pourBlock(toMovePipes);
-                p2.appendChild(a);
+                let pouringBlock = pourBlock(toMovePipes);
+                p2.appendChild(pouringBlock);
 
-                a.addEventListener("animationend", () => {
-                    a.remove()
-                    e.classList.remove("empty")
-                    // remove this condition
+                pouringBlock.addEventListener("animationend", () => {
+                    pouringBlock.remove()
+                    e.classList.remove("empty_animation")
                     toMovePipes && p2.append(...toMovePipes, ...Array.from(p2.childNodes));
                     toMovePipes = null;
+
+                    p1.classList.remove(animation);
+                    p2.classList.remove("pouringIn");
+                    this.isComplete();
+                    game && game.checkWin();
+                    this.resetPipes();
+
                 })
             })
-        })
-
-        p1.addEventListener("animationend", () => {
-            p1.classList.remove(animation);
-
-            // toMovePipes && toMovePipes.forEach(e => {
-            //     e.classList.remove("empty")
-            // })
-
-            this.isComplete();
-            game && game.checkWin();
-            this.resetPipes();
         })
 
     }
@@ -166,17 +142,18 @@ class Pipe {
     }
 
     isComplete() {
-        if (this.pipe.childNodes.length === 4) {
-            console.log("has four")
-            const areEquals = [...this.pipe.children].every(i => i.className === this.pipe.firstElementChild.className)
-            areEquals && this.pipe.classList.add("completed");
+        const areEquals = [...this.pipe.children]
+            .every(i => i.className === this.pipe.firstElementChild.className)
+        if (this.pipe.childNodes.length === 4 && areEquals) {
+            console.log("this pipe is completed")
+            this.pipe.classList.add("completed");
         }
     }
 
     addColorBlock() {
         for (let i = 0; i < 4; i++) {
-            if (i > 0) return;
-            let randomColor = this.listOfColors.splice(Math.floor(Math.random() * this.listOfColors.length), 1)[0];
+            let randomColor = this.listOfColors
+                .splice(Math.floor(Math.random() * this.listOfColors.length), 1)[0];
             const cb = new ColorBlock(this.pipe, randomColor);
             cb.init();
         }
@@ -196,7 +173,6 @@ class Pipe {
         if (classToMatch && classToMatch !== classToMatch1) return true
 
     }
-
 }
 
 function pourBlock(toMovePipes) {
@@ -219,28 +195,6 @@ class ColorBlock {
         this.bContainer.appendChild(this.colorBlock);
     }
 }
+
 const game = new Game();
 game.init()
-
-
-// let firstPos = null;
-// let dire = null;
-
-// document.addEventListener("click", (e) => {
-//     if (!firstPos) {
-//         firstPos = {
-//             x: e.clientX,
-//             y: e.clientY,
-//         }
-//         return;
-//     }
-
-//     if (firstPos.x > e.clientX) {
-//         dire = "left";
-//         firstPos = null;
-//     } else {
-//         firstPos = null;
-//         dire = "right";
-//     }
-//     console.log({ dire })
-// })
